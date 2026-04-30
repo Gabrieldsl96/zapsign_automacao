@@ -65,8 +65,9 @@ Acesse: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 |---------------------|--------------------------------------------------------|----------------------------------|
 | `SECRET_KEY`        | Chave secreta do Django                                | `django-insecure-...`            |
 | `DEBUG`             | Modo debug (`True` em desenvolvimento)                 | `True`                           |
-| `ALLOWED_HOSTS`     | Hosts permitidos, separados por vírgula                | `127.0.0.1,localhost`            |
-| `ZAPSIGN_API_TOKEN` | Token de API da ZapSign                                | `xxxxxxxx-xxxx-xxxx-xxxx-xxxx`   |
+| `ALLOWED_HOSTS`          | Hosts permitidos, separados por vírgula                     | `127.0.0.1,localhost`                     |
+| `CSRF_TRUSTED_ORIGINS`   | Origens confiáveis para POST (incluir URL do ngrok em dev)  | `http://127.0.0.1:8000,https://seu.ngrok` |
+| `ZAPSIGN_API_TOKEN`      | Token de API da ZapSign (funciona para sandbox e produção)  | `xxxxxxxx-xxxx-xxxx-xxxx-xxxx`            |
 
 ---
 
