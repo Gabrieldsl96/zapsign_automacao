@@ -1,0 +1,51 @@
+# Ambiente virtual
+venv/
+env/
+.venv/
+
+# Variáveis de ambiente
+.env
+
+# Banco de dados SQLite
+db.sqlite3
+
+# Arquivos de mídia (uploads)
+media/
+
+# Arquivos estáticos coletados
+staticfiles/
+static_root/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Distribuição / build
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Logs
+logs/
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Migrations (opcional — remova esta seção se quiser versionar as migrations)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Cobertura de testes
+.coverage
+htmlcov/

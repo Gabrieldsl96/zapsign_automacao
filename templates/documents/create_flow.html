@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Fluxo — ZapSign{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-10">
+
+    <h2 class="mb-1"><i class="bi bi-plus-circle"></i> Novo Fluxo de Documentos</h2>
+    <p class="text-muted mb-4">
+      Configure os 2 documentos. O Documento 2 será enviado para assinatura
+      <strong>automaticamente</strong> assim que o Documento 1 for totalmente assinado.
+    </p>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      <!-- Nome do fluxo -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+          <i class="bi bi-diagram-3"></i> Dados do Fluxo
+        </div>
+        <div class="card-body">
+          <label class="form-label fw-semibold" for="flow_name">Nome do Fluxo</label>
+          <input
+            type="text"
+            class="form-control"
+            id="flow_name"
+            name="flow_name"
+            placeholder="Ex: Contrato de Prestação de Serviços — João Silva"
+            value="{{ post_data.flow_name|default:'' }}"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Documento 1 -->
+      <div class="card shadow-sm mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-1-circle-fill"></i> Documento 1
+          <small class="ms-2 opacity-75">Enviado imediatamente para assinatura</small>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="doc1_name">Nome do Documento</label>
+            <input
+              type="text"
+              class="form-control"
+              id="doc1_name"
+              name="doc1_name"
+              placeholder="Ex: Contrato de Trabalho"
+              value="{{ post_data.doc1_name|default:'' }}"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="doc1_pdf_file">
+              <i class="bi bi-file-earmark-arrow-up"></i> Arquivo PDF
+            </label>
+            <input
+              type="file"
+              class="form-control"
+              id="doc1_pdf_file"
+              name="doc1_pdf_file"
+              accept=".pdf"
+              required
+            />
+            <div class="form-text">Selecione um arquivo PDF do seu computador.</div>
+          </div>
+
+          <hr />
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-semibold"><i class="bi bi-people"></i> Signatários</span>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addSigner('doc1')">
+              <i class="bi bi-plus"></i> Adicionar Signatário
+            </button>
+          </div>
+          <div id="doc1-signers">
+            <div class="row g-2 mb-2 signer-row">
+              <div class="col-md-5">
+                <input type="text" class="form-control" name="doc1_signer_name"
+                  placeholder="Nome completo" required />
+              </div>
+              <div class="col-md-6">
+                <input type="email" class="form-control" name="doc1_signer_email"
+                  placeholder="email@exemplo.com (opcional)" />
+              </div>
+              <div class="col-md-1 d-flex align-items-center">
+                <button type="button" class="btn btn-outline-danger btn-sm"
+                  onclick="removeSigner(this)" title="Remover">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documento 2 -->
+      <div class="card shadow-sm mb-4 border-warning">
+        <div class="card-header bg-warning text-dark">
+          <i class="bi bi-2-circle-fill"></i> Documento 2
+          <small class="ms-2 opacity-75">Gerado automaticamente após a assinatura do Documento 1</small>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="doc2_name">Nome do Documento</label>
+            <input
+              type="text"
+              class="form-control"
+              id="doc2_name"
+              name="doc2_name"
+              placeholder="Ex: Termo de Confidencialidade"
+              value="{{ post_data.doc2_name|default:'' }}"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="doc2_pdf_file">
+              <i class="bi bi-file-earmark-arrow-up"></i> Arquivo PDF
+            </label>
+            <input
+              type="file"
+              class="form-control"
+              id="doc2_pdf_file"
+              name="doc2_pdf_file"
+              accept=".pdf"
+              required
+            />
+            <div class="form-text">Selecione um arquivo PDF do seu computador.</div>
+          </div>
+
+          <hr />
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-semibold"><i class="bi bi-people"></i> Signatários</span>
+            <button type="button" class="btn btn-outline-warning btn-sm" onclick="addSigner('doc2')">
+              <i class="bi bi-plus"></i> Adicionar Signatário
+            </button>
+          </div>
+          <div id="doc2-signers">
+            <div class="row g-2 mb-2 signer-row">
+              <div class="col-md-5">
+                <input type="text" class="form-control" name="doc2_signer_name"
+                  placeholder="Nome completo" required />
+              </div>
+              <div class="col-md-6">
+                <input type="email" class="form-control" name="doc2_signer_email"
+                  placeholder="email@exemplo.com (opcional)" />
+              </div>
+              <div class="col-md-1 d-flex align-items-center">
+                <button type="button" class="btn btn-outline-danger btn-sm"
+                  onclick="removeSigner(this)" title="Remover">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success px-4">
+          <i class="bi bi-send"></i> Criar Fluxo e Enviar Documento 1
+        </button>
+        <a href="{% url 'documents:index' %}" class="btn btn-outline-secondary">
+          Cancelar
+        </a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function addSigner(docPrefix) {
+    const container = document.getElementById(docPrefix + '-signers');
+    const row = document.createElement('div');
+    row.className = 'row g-2 mb-2 signer-row';
+    row.innerHTML = `
+      <div class="col-md-5">
+        <input type="text" class="form-control" name="${docPrefix}_signer_name"
+          placeholder="Nome completo" required />
+      </div>
+      <div class="col-md-6">
+        <input type="email" class="form-control" name="${docPrefix}_signer_email"
+          placeholder="email@exemplo.com (opcional)" />
+      </div>
+      <div class="col-md-1 d-flex align-items-center">
+        <button type="button" class="btn btn-outline-danger btn-sm"
+          onclick="removeSigner(this)" title="Remover">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    `;
+    container.appendChild(row);
+  }
+
+  function removeSigner(btn) {
+    const container = btn.closest('[id$="-signers"]');
+    const rows = container.querySelectorAll('.signer-row');
+    if (rows.length > 1) {
+      btn.closest('.signer-row').remove();
+    } else {
+      alert('É necessário pelo menos um signatário.');
+    }
+  }
+</script>
+{% endblock %}

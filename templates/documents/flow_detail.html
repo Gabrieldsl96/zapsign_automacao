@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}{{ flow.name }} — ZapSign{% endblock %}
+
+{% block content %}
+
+<!-- Cabeçalho do fluxo -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-1">
+        <li class="breadcrumb-item"><a href="{% url 'documents:index' %}">Fluxos</a></li>
+        <li class="breadcrumb-item active">{{ flow.name }}</li>
+      </ol>
+    </nav>
+    <h2 class="mb-0">{{ flow.name }}</h2>
+    <small class="text-muted">
+      <i class="bi bi-calendar3"></i> Criado em {{ flow.created_at|date:"d/m/Y \à\s H:i" }}
+    </small>
+  </div>
+
+  {% if flow.status == 'completed' %}
+    <span class="badge bg-success fs-6 align-self-center">
+      <i class="bi bi-check-circle-fill"></i> Fluxo Concluído
+    </span>
+  {% elif flow.status == 'doc2_pending' %}
+    <span class="badge bg-warning text-dark fs-6 align-self-center">
+      <i class="bi bi-hourglass-split"></i> Aguardando assinatura do Documento 2
+    </span>
+  {% else %}
+    <span class="badge bg-primary fs-6 align-self-center">
+      <i class="bi bi-hourglass-split"></i> Aguardando assinatura do Documento 1
+    </span>
+  {% endif %}
+</div>
+
+<!-- Linha do tempo visual -->
+<div class="d-flex align-items-center gap-2 mb-5">
+  {% for doc in flow.documents.all %}
+    <!-- Passo -->
+    <div class="text-center" style="min-width: 140px;">
+      {% if doc.status == 'signed' %}
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-success text-white"
+          style="width:48px;height:48px;font-size:1.3rem;">
+          <i class="bi bi-check-lg"></i>
+        </div>
+      {% elif doc.status == 'pending' %}
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary text-white"
+          style="width:48px;height:48px;font-size:1.3rem;">
+          {{ doc.order }}
+        </div>
+      {% else %}
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-secondary text-white"
+          style="width:48px;height:48px;font-size:1.3rem;">
+          {{ doc.order }}
+        </div>
+      {% endif %}
+      <div class="small mt-1 fw-semibold">{{ doc.name }}</div>
+      <div class="small text-muted">{{ doc.get_status_display }}</div>
+    </div>
+    {% if not forloop.last %}
+      <div class="flex-grow-1 border-top border-2
+        {% if doc.status == 'signed' %}border-success{% else %}border-secondary{% endif %}"
+        style="min-width:40px;"></div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<!-- Detalhes de cada documento -->
+{% for doc in flow.documents.all %}
+  <div class="card shadow-sm mb-4 doc-card {{ doc.status }}">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="fw-bold">
+        <i class="bi bi-file-earmark-text"></i>
+        Documento {{ doc.order }}: {{ doc.name }}
+      </span>
+      {% if doc.status == 'signed' %}
+        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Assinado</span>
+      {% elif doc.status == 'pending' %}
+        <span class="badge bg-primary"><i class="bi bi-clock"></i> Aguardando assinatura</span>
+      {% else %}
+        <span class="badge bg-secondary"><i class="bi bi-lock"></i> Aguardando Doc 1</span>
+      {% endif %}
+    </div>
+    <div class="card-body">
+
+      {% if doc.status != 'not_created' %}
+        <div class="mb-3">
+          <span class="text-muted small">Token ZapSign:</span>
+          <code class="ms-1">{{ doc.zapsign_token }}</code>
+        </div>
+      {% else %}
+        <div class="alert alert-secondary py-2 mb-3">
+          <i class="bi bi-info-circle"></i>
+          Este documento será criado na ZapSign automaticamente após a assinatura do Documento 1.
+        </div>
+      {% endif %}
+
+      <!-- Signatários -->
+      <h6 class="mb-2"><i class="bi bi-people"></i> Signatários</h6>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Nome</th>
+              <th>E-mail</th>
+              <th>Status</th>
+              <th>Link de Assinatura</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for signer in doc.signers.all %}
+              <tr>
+                <td>{{ signer.name }}</td>
+                <td>{{ signer.email|default:"—" }}</td>
+                <td>
+                  {% if signer.status == 'signed' %}
+                    <span class="badge bg-success"><i class="bi bi-check"></i> Assinado</span>
+                  {% elif signer.status == 'pending' %}
+                    <span class="badge bg-warning text-dark">Pendente</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Novo</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if signer.sign_url %}
+                    <a href="{{ signer.sign_url }}" target="_blank" rel="noopener noreferrer"
+                      class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-pen"></i> Assinar
+                    </a>
+                    <button
+                      class="btn btn-sm btn-outline-secondary"
+                      onclick="navigator.clipboard.writeText('{{ signer.sign_url }}');this.textContent='Copiado!';"
+                    >
+                      <i class="bi bi-clipboard"></i> Copiar
+                    </button>
+                  {% else %}
+                    <span class="text-muted small">Disponível após criação do documento</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="text-center text-muted">Nenhum signatário</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+{% endfor %}
+
+<a href="{% url 'documents:index' %}" class="btn btn-outline-secondary">
+  <i class="bi bi-arrow-left"></i> Voltar para a lista
+</a>
+
+{% endblock %}
