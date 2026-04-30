@@ -173,11 +173,66 @@
 
     /* ── Mobile ── */
     @media (max-width: 767px) {
-      .navbar-side { transform: translateX(calc(-100% - 2rem)); }
+      .navbar-side {
+        transform: translateX(calc(-100% - 2rem));
+        top: 0;
+        bottom: 0;
+        left: 0;
+        border-radius: 0 10px 10px 0;
+      }
       .navbar-side.open { transform: translateX(0); box-shadow: .5rem 0 1.5rem rgba(0,0,0,.3); }
       .main-wrapper { margin-left: 0; }
+      .content-area { padding-top: 4.5rem; }
       .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199; }
       .sidebar-overlay.open { display: block; }
+
+      /* Labels sempre visíveis dentro do sidebar aberto em mobile */
+      .navbar-side.open .navbar-side__link,
+      .navbar-side.open .navbar-side__avatar,
+      .navbar-side.open .navbar-side__logout-btn {
+        justify-content: center;
+        padding-left: 0;
+        width: 10rem;
+        gap: .75rem;
+      }
+      .navbar-side.open .navbar-side__link span,
+      .navbar-side.open .navbar-side__avatar span,
+      .navbar-side.open .navbar-side__logout-btn span {
+        position: static;
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        box-shadow: none;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        border-radius: 0;
+      }
+      .navbar-side.open .navbar-side__avatar span { color: #2d3a55; }
+      .navbar-side.open .navbar-side__logout-btn span { color: #e53e3e; }
+    }
+    .hamburger-btn {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      z-index: 400;
+      width: 2.6rem;
+      height: 2.6rem;
+      border-radius: 10px;
+      background: #fff;
+      border: none;
+      box-shadow: 0 2px 12px rgba(0,0,0,.12);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #406ff3;
+      transition: background .2s;
+      display: none;
+    }
+    @media (max-width: 767px) {
+      .hamburger-btn { display: flex !important; }
+      .navbar-side.open ~ .hamburger-btn { display: none !important; }
     }
   </style>
 </head>
@@ -216,6 +271,11 @@
   </div>
   {% endif %}
 </nav>
+
+<!-- Hamburger mobile -->
+<button class="hamburger-btn" id="hamburgerBtn" onclick="openSidebar()" aria-label="Abrir menu">
+  <i class="bi bi-list"></i>
+</button>
 
 <!-- Main -->
 <div class="main-wrapper">
@@ -257,10 +317,12 @@
   function openSidebar() {
     document.getElementById('sidebar').classList.add('open');
     document.getElementById('sidebarOverlay').classList.add('open');
+    document.getElementById('hamburgerBtn').style.display = 'none';
   }
   function closeSidebar() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
+    document.getElementById('hamburgerBtn').style.display = '';
   }
   // Gooey pill
   (function() {
