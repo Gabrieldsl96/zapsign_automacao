@@ -1,77 +1,78 @@
 {% extends "base.html" %}
 
 {% block title %}{{ flow.name }} — ZapSign{% endblock %}
+{% block breadcrumb %}<a href="{% url 'documents:index' %}" class="text-decoration-none text-muted">Fluxos</a> / {{ flow.name }}{% endblock %}
 
 {% block content %}
 
-<!-- Cabeçalho do fluxo -->
+<!-- Header -->
 <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
   <div>
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb mb-1">
-        <li class="breadcrumb-item"><a href="{% url 'documents:index' %}">Fluxos</a></li>
-        <li class="breadcrumb-item active">{{ flow.name }}</li>
-      </ol>
-    </nav>
-    <h2 class="mb-0">{{ flow.name }}</h2>
-    <small class="text-muted">
-      <i class="bi bi-calendar3"></i> Criado em {{ flow.created_at|date:"d/m/Y \à\s H:i" }}
-    </small>
-  </div>
-
-  {% if flow.status == 'completed' %}
-    <span class="badge bg-success fs-6 align-self-center">
-      <i class="bi bi-check-circle-fill"></i> Fluxo Concluído
-    </span>
-  {% elif flow.status == 'doc2_pending' %}
-    <span class="badge bg-warning text-dark fs-6 align-self-center">
-      <i class="bi bi-hourglass-split"></i> Aguardando assinatura do Documento 2
-    </span>
-  {% else %}
-    <span class="badge bg-primary fs-6 align-self-center">
-      <i class="bi bi-hourglass-split"></i> Aguardando assinatura do Documento 1
-    </span>
-  {% endif %}
-</div>
-
-<!-- Linha do tempo visual -->
-<div class="d-flex align-items-center gap-2 mb-5">
-  {% for doc in flow.documents.all %}
-    <!-- Passo -->
-    <div class="text-center" style="min-width: 140px;">
-      {% if doc.status == 'signed' %}
-        <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-success text-white"
-          style="width:48px;height:48px;font-size:1.3rem;">
-          <i class="bi bi-check-lg"></i>
-        </div>
-      {% elif doc.status == 'pending' %}
-        <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary text-white"
-          style="width:48px;height:48px;font-size:1.3rem;">
-          {{ doc.order }}
-        </div>
-      {% else %}
-        <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-secondary text-white"
-          style="width:48px;height:48px;font-size:1.3rem;">
-          {{ doc.order }}
-        </div>
-      {% endif %}
-      <div class="small mt-1 fw-semibold">{{ doc.name }}</div>
-      <div class="small text-muted">{{ doc.get_status_display }}</div>
+    <h4 class="fw-bold mb-1">{{ flow.name }}</h4>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="badge bg-light text-muted border">
+        <i class="bi bi-folder2 text-primary"></i> {{ flow.folder }}
+      </span>
+      <span class="text-muted small">
+        <i class="bi bi-calendar3"></i> Criado em {{ flow.created_at|date:"d/m/Y \à\s H:i" }}
+      </span>
     </div>
-    {% if not forloop.last %}
-      <div class="flex-grow-1 border-top border-2
-        {% if doc.status == 'signed' %}border-success{% else %}border-secondary{% endif %}"
-        style="min-width:40px;"></div>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    {% if flow.status == 'completed' %}
+      <span class="badge bg-success fs-6"><i class="bi bi-check-circle-fill"></i> Concluído</span>
+    {% elif flow.status == 'doc2_pending' %}
+      <span class="badge bg-warning text-dark fs-6"><i class="bi bi-hourglass-split"></i> Aguardando Doc 2</span>
+    {% else %}
+      <span class="badge bg-primary fs-6"><i class="bi bi-hourglass-split"></i> Aguardando Doc 1</span>
     {% endif %}
-  {% endfor %}
+    <a href="{% url 'documents:index' %}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+  </div>
 </div>
 
-<!-- Detalhes de cada documento -->
+<!-- Linha do tempo -->
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-body py-4">
+    <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+      {% for doc in flow.documents.all %}
+        <div class="text-center" style="min-width:130px;">
+          {% if doc.status == 'signed' %}
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-success text-white shadow-sm"
+              style="width:52px;height:52px;font-size:1.4rem;">
+              <i class="bi bi-check-lg"></i>
+            </div>
+          {% elif doc.status == 'pending' %}
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-primary text-white shadow-sm"
+              style="width:52px;height:52px;font-size:1.25rem;font-weight:700;">
+              {{ doc.order }}
+            </div>
+          {% else %}
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-secondary border"
+              style="width:52px;height:52px;font-size:1.25rem;font-weight:700;">
+              {{ doc.order }}
+            </div>
+          {% endif %}
+          <div class="small mt-2 fw-semibold">{{ doc.name|truncatechars:22 }}</div>
+          <div class="small text-muted">{{ doc.get_status_display }}</div>
+        </div>
+        {% if not forloop.last %}
+          <div class="flex-grow-1 border-top border-2
+            {% if doc.status == 'signed' %}border-success{% else %}border-light{% endif %}"
+            style="min-width:40px;max-width:100px;"></div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Documentos -->
 {% for doc in flow.documents.all %}
-  <div class="card shadow-sm mb-4 doc-card {{ doc.status }}">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span class="fw-bold">
-        <i class="bi bi-file-earmark-text"></i>
+  <div class="card shadow-sm mb-4 border-0 doc-card {{ doc.status }}">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+      <span class="fw-semibold">
+        <i class="bi bi-file-earmark-text text-primary"></i>
         Documento {{ doc.order }}: {{ doc.name }}
       </span>
       {% if doc.status == 'signed' %}
@@ -85,62 +86,73 @@
     <div class="card-body">
 
       {% if doc.status != 'not_created' %}
-        <div class="mb-3">
-          <span class="text-muted small">Token ZapSign:</span>
-          <code class="ms-1">{{ doc.zapsign_token }}</code>
+        <div class="mb-3 p-2 bg-light rounded d-flex align-items-center gap-2">
+          <i class="bi bi-key text-muted"></i>
+          <span class="text-muted small me-1">Token ZapSign:</span>
+          <code class="small">{{ doc.zapsign_token }}</code>
         </div>
       {% else %}
-        <div class="alert alert-secondary py-2 mb-3">
-          <i class="bi bi-info-circle"></i>
+        <div class="alert alert-light border mb-3 py-2">
+          <i class="bi bi-info-circle text-primary"></i>
           Este documento será criado na ZapSign automaticamente após a assinatura do Documento 1.
         </div>
       {% endif %}
 
-      <!-- Signatários -->
-      <h6 class="mb-2"><i class="bi bi-people"></i> Signatários</h6>
+      <h6 class="mb-3 fw-semibold"><i class="bi bi-people"></i> Signatários</h6>
       <div class="table-responsive">
-        <table class="table table-sm table-bordered align-middle mb-0">
-          <thead class="table-light">
+        <table class="table table-sm align-middle mb-0" style="border-radius:.5rem;overflow:hidden;">
+          <thead style="background:#f8f9fa;">
             <tr>
-              <th>Nome</th>
+              <th class="ps-3">Nome</th>
               <th>E-mail</th>
               <th>Status</th>
               <th>Link de Assinatura</th>
+              <th>Documento Assinado</th>
             </tr>
           </thead>
           <tbody>
             {% for signer in doc.signers.all %}
               <tr>
-                <td>{{ signer.name }}</td>
-                <td>{{ signer.email|default:"—" }}</td>
+                <td class="ps-3 fw-semibold">{{ signer.name }}</td>
+                <td class="text-muted">{{ signer.email|default:"—" }}</td>
                 <td>
                   {% if signer.status == 'signed' %}
                     <span class="badge bg-success"><i class="bi bi-check"></i> Assinado</span>
                   {% elif signer.status == 'pending' %}
-                    <span class="badge bg-warning text-dark">Pendente</span>
+                    <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pendente</span>
                   {% else %}
                     <span class="badge bg-secondary">Novo</span>
                   {% endif %}
                 </td>
                 <td>
                   {% if signer.sign_url %}
-                    <a href="{{ signer.sign_url }}" target="_blank" rel="noopener noreferrer"
-                      class="btn btn-sm btn-outline-primary">
-                      <i class="bi bi-pen"></i> Assinar
-                    </a>
-                    <button
-                      class="btn btn-sm btn-outline-secondary"
-                      onclick="navigator.clipboard.writeText('{{ signer.sign_url }}');this.textContent='Copiado!';"
-                    >
-                      <i class="bi bi-clipboard"></i> Copiar
-                    </button>
+                    <div class="d-flex gap-1">
+                      <a href="{{ signer.sign_url }}" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-sm btn-primary">
+                        <i class="bi bi-pen"></i> Assinar
+                      </a>
+                      <button class="btn btn-sm btn-outline-secondary"
+                        onclick="copyUrl(this, '{{ signer.sign_url }}')" title="Copiar link">
+                        <i class="bi bi-clipboard"></i>
+                      </button>
+                    </div>
                   {% else %}
-                    <span class="text-muted small">Disponível após criação do documento</span>
+                    <span class="text-muted small"><i class="bi bi-lock"></i> Disponível após criação</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if doc.signed_file_url %}
+                    <a href="{{ doc.signed_file_url }}" target="_blank" rel="noopener noreferrer"
+                      class="btn btn-sm btn-success">
+                      <i class="bi bi-file-earmark-arrow-down"></i> Baixar
+                    </a>
+                  {% else %}
+                    <span class="text-muted small">—</span>
                   {% endif %}
                 </td>
               </tr>
             {% empty %}
-              <tr><td colspan="4" class="text-center text-muted">Nenhum signatário</td></tr>
+              <tr><td colspan="5" class="text-center text-muted py-3">Nenhum signatário</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -150,8 +162,16 @@
   </div>
 {% endfor %}
 
-<a href="{% url 'documents:index' %}" class="btn btn-outline-secondary">
-  <i class="bi bi-arrow-left"></i> Voltar para a lista
-</a>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+  function copyUrl(btn, url) {
+    navigator.clipboard.writeText(url).then(() => {
+      const icon = btn.querySelector('i');
+      icon.className = 'bi bi-check-lg text-success';
+      setTimeout(() => { icon.className = 'bi bi-clipboard'; }, 2000);
+    });
+  }
+</script>
 {% endblock %}

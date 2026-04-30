@@ -39,7 +39,7 @@ def create_zapsign_document(document):
     payload = {
         "name": document.name,
         "base64_pdf": _file_to_base64(document.pdf_file),
-        "folder_path": f"/Sistema_RN/{document.flow.name}",
+        "folder_path": f"/{document.flow.folder}/{document.flow.name}",
         "signers": signers_data,
     }
 

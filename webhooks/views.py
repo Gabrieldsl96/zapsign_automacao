@@ -81,9 +81,14 @@ def _handle_doc_signed(payload):
         )
         return
 
-    # Todos assinaram — atualiza status do documento
+    # Todos assinaram — atualiza status e salva link do PDF assinado
     doc.status = "signed"
-    doc.save(update_fields=["status"])
+    signed_file = payload.get("signed_file", "")
+    update_fields = ["status"]
+    if signed_file:
+        doc.signed_file_url = signed_file
+        update_fields.append("signed_file_url")
+    doc.save(update_fields=update_fields)
 
     flow = doc.flow
 

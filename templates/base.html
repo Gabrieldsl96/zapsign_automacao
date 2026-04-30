@@ -4,64 +4,213 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}ZapSign — Automação de Documentos{% endblock %}</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-    crossorigin="anonymous"
-  />
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    rel="stylesheet"
-  />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
   <style>
-    body { background-color: #f8f9fa; }
-    .navbar-brand { font-weight: 700; letter-spacing: .5px; }
-    .badge-not_created  { background-color: #6c757d; }
-    .badge-doc1_pending { background-color: #0d6efd; }
-    .badge-doc2_pending { background-color: #fd7e14; }
-    .badge-pending      { background-color: #0d6efd; }
-    .badge-signed       { background-color: #198754; }
-    .badge-completed    { background-color: #198754; }
+    :root { --sidebar-w: 240px; }
+    body { background: #f0f2f5; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: #1e293b;
+      position: fixed;
+      top: 0; left: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 200;
+      transition: transform .25s ease;
+    }
+    .sidebar-brand {
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar .nav-link {
+      color: rgba(255,255,255,.65);
+      padding: .55rem 1rem;
+      border-radius: .375rem;
+      margin: .1rem .5rem;
+      font-size: .9rem;
+      transition: background .15s, color .15s;
+    }
+    .sidebar .nav-link i { margin-right: .4rem; }
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+      background: rgba(255,255,255,.1);
+      color: #fff;
+    }
+    .sidebar-footer {
+      padding: .75rem 1rem;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #0d6efd;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ── Main wrapper ── */
+    .main-wrapper {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid #dee2e6;
+      padding: .65rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .content-area { padding: 1.5rem; flex: 1; }
+
+    /* ── Cards ── */
+    .flow-card { transition: transform .15s, box-shadow .15s; }
+    .flow-card:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1.2rem rgba(0,0,0,.12) !important; }
+
+    /* ── Doc status border ── */
     .doc-card { border-left: 4px solid #0d6efd; }
     .doc-card.signed { border-left-color: #198754; }
     .doc-card.not_created { border-left-color: #adb5bd; }
+
+    /* ── Filter pills ── */
+    .filter-pill { cursor: pointer; border-radius: 2rem !important; font-size: .82rem; }
+    .filter-pill.active { font-weight: 600; }
+
+    /* ── Mobile ── */
+    @media (max-width: 767px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); box-shadow: .5rem 0 1.5rem rgba(0,0,0,.3); }
+      .main-wrapper { margin-left: 0; }
+      .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199; }
+      .sidebar-overlay.open { display: block; }
+    }
   </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-  <div class="container">
-    <a class="navbar-brand" href="{% url 'documents:index' %}">
-      <i class="bi bi-file-earmark-check"></i> ZapSign Automação
+<!-- Overlay mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <a href="{% url 'documents:index' %}" class="text-white text-decoration-none d-flex align-items-center gap-2">
+      <i class="bi bi-file-earmark-check-fill fs-4 text-primary"></i>
+      <div>
+        <div class="fw-bold lh-1">ZapSign</div>
+        <div class="small text-white-50" style="font-size:.72rem;">Automação</div>
+      </div>
     </a>
-    <div class="ms-auto">
-      <a href="{% url 'documents:create_flow' %}" class="btn btn-success btn-sm">
-        <i class="bi bi-plus-lg"></i> Novo Fluxo
-      </a>
-    </div>
   </div>
+
+  <div class="pt-2 flex-grow-1">
+    <div class="px-2 mb-1">
+      <span class="text-white-50" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;padding:.25rem .5rem;display:block;">Menu</span>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="{% url 'documents:index' %}" class="nav-link {% block nav_index %}{% endblock %}">
+          <i class="bi bi-collection"></i> Fluxos
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'documents:create_flow' %}" class="nav-link {% block nav_create %}{% endblock %}">
+          <i class="bi bi-plus-circle"></i> Novo Fluxo
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  {% if user.is_authenticated %}
+  <div class="sidebar-footer">
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <div class="avatar">{{ user.username|first|upper }}</div>
+      <span class="text-white-50 small text-truncate" style="font-size:.82rem;">{{ user.username }}</span>
+    </div>
+    <form action="{% url 'logout' %}" method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm w-100" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.12);">
+        <i class="bi bi-box-arrow-right"></i> Sair
+      </button>
+    </form>
+  </div>
+  {% endif %}
 </nav>
 
-<div class="container pb-5">
+<!-- Main -->
+<div class="main-wrapper">
+  <!-- Topbar -->
+  <div class="topbar d-flex align-items-center gap-3">
+    <button class="btn btn-sm btn-light d-md-none p-1 px-2" onclick="openSidebar()">
+      <i class="bi bi-list fs-5"></i>
+    </button>
+    <div class="text-muted small d-none d-md-block">
+      {% block breadcrumb %}{% endblock %}
+    </div>
+    <div class="ms-auto d-flex align-items-center gap-2">
+      {% if user.is_authenticated %}
+        <span class="badge bg-light text-dark border">
+          <i class="bi bi-person-circle text-primary"></i> {{ user.username }}
+        </span>
+      {% endif %}
+    </div>
+  </div>
 
+  <!-- Alerts -->
   {% if messages %}
+  <div class="px-4 pt-3 d-flex flex-column gap-2" id="alert-container">
     {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <div class="d-flex align-items-start gap-3 px-4 py-3 rounded-3 shadow-sm"
+        style="background:{% if message.tags == 'error' %}#fff0f0{% elif message.tags == 'success' %}#f0fff4{% elif message.tags == 'warning' %}#fffbe6{% else %}#f0f6ff{% endif %};border:1px solid {% if message.tags == 'error' %}#f5c2c7{% elif message.tags == 'success' %}#a3cfbb{% elif message.tags == 'warning' %}#ffe082{% else %}#9ec5fe{% endif %};max-width:680px;">
+        <i class="bi {% if message.tags == 'error' %}bi-x-circle-fill{% elif message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'warning' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} mt-1 flex-shrink-0"
+          style="color:{% if message.tags == 'error' %}#b02a37{% elif message.tags == 'success' %}#146c43{% elif message.tags == 'warning' %}#997404{% else %}#084298{% endif %};font-size:1.1rem;"></i>
+        <div class="flex-grow-1">
+          <div class="fw-semibold small" style="color:{% if message.tags == 'error' %}#b02a37{% elif message.tags == 'success' %}#146c43{% elif message.tags == 'warning' %}#997404{% else %}#084298{% endif %};">
+            {% if message.tags == 'error' %}Erro{% elif message.tags == 'success' %}Sucesso{% elif message.tags == 'warning' %}Atenção{% else %}Info{% endif %}
+          </div>
+          <div class="small text-dark mt-1">{{ message }}</div>
+        </div>
+        <button type="button"
+          onclick="this.closest('.d-flex').remove()"
+          style="background:none;border:none;cursor:pointer;color:#888;font-size:1.1rem;line-height:1;padding:0;margin-left:.5rem;"
+          aria-label="Fechar">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
     {% endfor %}
+  </div>
   {% endif %}
 
-  {% block content %}{% endblock %}
+  <!-- Content -->
+  <div class="content-area">
+    {% block content %}{% endblock %}
+  </div>
 </div>
 
-<script
-  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmWaODN9N4Sfd7+bE9d7XWVT8dh8"
-  crossorigin="anonymous"
-></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmWaODN9N4Sfd7+bE9d7XWVT8dh8" crossorigin="anonymous"></script>
+<script>
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.add('open');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+  }
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

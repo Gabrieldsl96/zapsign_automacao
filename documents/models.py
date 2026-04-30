@@ -11,6 +11,9 @@ class DocumentFlow(models.Model):
     ]
 
     name = models.CharField(max_length=255, verbose_name="Nome do Fluxo")
+    folder = models.CharField(
+        max_length=255, verbose_name="Pasta ZapSign", default="Sistema_RN"
+    )
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -53,6 +56,9 @@ class ZapSignDocument(models.Model):
     )
     zapsign_token = models.CharField(
         max_length=255, blank=True, verbose_name="Token ZapSign"
+    )
+    signed_file_url = models.URLField(
+        blank=True, verbose_name="Link do Documento Assinado"
     )
     status = models.CharField(
         max_length=20,

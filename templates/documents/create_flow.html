@@ -1,170 +1,196 @@
 {% extends "base.html" %}
 
 {% block title %}Novo Fluxo — ZapSign{% endblock %}
+{% block nav_create %}active{% endblock %}
+{% block breadcrumb %}<a href="{% url 'documents:index' %}" class="text-decoration-none text-muted">Fluxos</a> / Novo Fluxo{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-12 col-lg-10">
+  <div class="col-12 col-lg-9">
 
-    <h2 class="mb-1"><i class="bi bi-plus-circle"></i> Novo Fluxo de Documentos</h2>
-    <p class="text-muted mb-4">
-      Configure os 2 documentos. O Documento 2 será enviado para assinatura
-      <strong>automaticamente</strong> assim que o Documento 1 for totalmente assinado.
-    </p>
+    <div class="mb-4">
+      <h4 class="fw-bold mb-1"><i class="bi bi-plus-circle text-primary"></i> Novo Fluxo de Documentos</h4>
+      <p class="text-muted mb-0 small">
+        Configure os 2 documentos. O Documento 2 será enviado <strong>automaticamente</strong> após o Documento 1 ser totalmente assinado.
+      </p>
+    </div>
 
-    <form method="post" enctype="multipart/form-data" novalidate>
+    <form id="create-flow-form" method="post" enctype="multipart/form-data" novalidate>
       {% csrf_token %}
 
-      <!-- Nome do fluxo -->
-      <div class="card shadow-sm mb-4">
-        <div class="card-header bg-dark text-white">
+      <!-- Dados do Fluxo -->
+      <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-dark text-white py-3">
           <i class="bi bi-diagram-3"></i> Dados do Fluxo
         </div>
         <div class="card-body">
-          <label class="form-label fw-semibold" for="flow_name">Nome do Fluxo</label>
-          <input
-            type="text"
-            class="form-control"
-            id="flow_name"
-            name="flow_name"
-            placeholder="Ex: Contrato de Prestação de Serviços — João Silva"
-            value="{{ post_data.flow_name|default:'' }}"
-            required
-          />
+          <div class="row g-3">
+            <!-- Pasta (top-level ZapSign) -->
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold" for="folder_select">
+                <i class="bi bi-folder2"></i> Pasta ZapSign
+              </label>
+              <select class="form-select" id="folder_select" onchange="handleSelectChange('folder_select','new_folder_wrap','new_folder_input','folder_name')">
+                {% for f in folders %}
+                  <option value="{{ f }}" {% if post_data.folder_name == f %}selected{% endif %}>{{ f }}</option>
+                {% endfor %}
+                {% if not folders %}
+                  <option value="Sistema_RN" selected>Sistema_RN</option>
+                {% endif %}
+                <option value="__new__">+ Nova pasta...</option>
+              </select>
+              <div id="new_folder_wrap" class="mt-2" style="display:none;">
+                <input type="text" class="form-control" id="new_folder_input"
+                  placeholder="Nome da nova pasta (ex: Clientes)"
+                  value="{{ post_data.folder_name|default:'' }}" />
+              </div>
+              <input type="hidden" name="folder_name" id="folder_name"
+                value="{{ post_data.folder_name|default:'Sistema_RN' }}" />
+              <div class="form-text">Pasta de nível raiz no ZapSign.</div>
+            </div>
+
+            <!-- Subpasta / Nome do Fluxo -->
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold" for="subfolder_select">
+                <i class="bi bi-folder2-open"></i> Subpasta / Nome do Fluxo
+              </label>
+              <select class="form-select" id="subfolder_select" onchange="handleSelectChange('subfolder_select','new_subfolder_wrap','new_subfolder_input','flow_name')">
+                {% for sf in subfolders %}
+                  <option value="{{ sf }}" {% if post_data.flow_name == sf %}selected{% endif %}>{{ sf }}</option>
+                {% endfor %}
+                {% if not subfolders %}
+                  <option value="__new__" selected>+ Nova subpasta...</option>
+                {% else %}
+                  <option value="__new__">+ Nova subpasta...</option>
+                {% endif %}
+              </select>
+              <div id="new_subfolder_wrap" class="mt-2" style="display:{% if not subfolders %}block{% else %}none{% endif %};">
+                <input type="text" class="form-control" id="new_subfolder_input"
+                  placeholder="Nome da subpasta (ex: Contrato João Silva)"
+                  value="{% if not subfolders %}{{ post_data.flow_name|default:'' }}{% endif %}" />
+              </div>
+              <input type="hidden" name="flow_name" id="flow_name"
+                value="{{ post_data.flow_name|default:'' }}" />
+              <div id="flow_name_error" class="text-danger small mt-1" style="display:none;">
+                <i class="bi bi-exclamation-circle"></i> Informe o nome da subpasta / fluxo.
+              </div>
+              <div class="form-text">Subpasta dentro da pasta escolhida. Os documentos ficam aqui.</div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Documento 1 -->
-      <div class="card shadow-sm mb-4 border-primary">
-        <div class="card-header bg-primary text-white">
+      <div class="card shadow-sm mb-4 border-0" style="border-top: 3px solid #0d6efd !important;">
+        <div class="card-header text-white py-3" style="background:#0d6efd;">
           <i class="bi bi-1-circle-fill"></i> Documento 1
           <small class="ms-2 opacity-75">Enviado imediatamente para assinatura</small>
         </div>
         <div class="card-body">
-          <div class="mb-3">
-            <label class="form-label fw-semibold" for="doc1_name">Nome do Documento</label>
-            <input
-              type="text"
-              class="form-control"
-              id="doc1_name"
-              name="doc1_name"
-              placeholder="Ex: Contrato de Trabalho"
-              value="{{ post_data.doc1_name|default:'' }}"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold" for="doc1_pdf_file">
-              <i class="bi bi-file-earmark-arrow-up"></i> Arquivo PDF
-            </label>
-            <input
-              type="file"
-              class="form-control"
-              id="doc1_pdf_file"
-              name="doc1_pdf_file"
-              accept=".pdf"
-              required
-            />
-            <div class="form-text">Selecione um arquivo PDF do seu computador.</div>
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold" for="doc1_name">Nome do Documento</label>
+              <input type="text" class="form-control" id="doc1_name" name="doc1_name"
+                placeholder="Ex: Contrato de Trabalho"
+                value="{{ post_data.doc1_name|default:'' }}" />
+              <div class="invalid-feedback">O nome do Documento 1 é obrigatório.</div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold" for="doc1_pdf_file">
+                <i class="bi bi-file-earmark-arrow-up"></i> Arquivo PDF
+              </label>
+              <input type="file" class="form-control" id="doc1_pdf_file" name="doc1_pdf_file" accept=".pdf" />
+              <div class="invalid-feedback">Selecione o arquivo PDF do Documento 1 (apenas .pdf).</div>
+            </div>
           </div>
 
-          <hr />
-          <div class="d-flex justify-content-between align-items-center mb-2">
+          <hr class="my-3" />
+          <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="fw-semibold"><i class="bi bi-people"></i> Signatários</span>
             <button type="button" class="btn btn-outline-primary btn-sm" onclick="addSigner('doc1')">
-              <i class="bi bi-plus"></i> Adicionar Signatário
+              <i class="bi bi-plus"></i> Adicionar
             </button>
           </div>
           <div id="doc1-signers">
             <div class="row g-2 mb-2 signer-row">
               <div class="col-md-5">
-                <input type="text" class="form-control" name="doc1_signer_name"
-                  placeholder="Nome completo" required />
+                <input type="text" class="form-control" name="doc1_signer_name" placeholder="Nome completo" />
+                <div class="invalid-feedback">Informe o nome do signatário.</div>
               </div>
               <div class="col-md-6">
-                <input type="email" class="form-control" name="doc1_signer_email"
-                  placeholder="email@exemplo.com (opcional)" />
+                <input type="email" class="form-control" name="doc1_signer_email" placeholder="email@exemplo.com (opcional)" />
               </div>
               <div class="col-md-1 d-flex align-items-center">
-                <button type="button" class="btn btn-outline-danger btn-sm"
-                  onclick="removeSigner(this)" title="Remover">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeSigner(this)" title="Remover">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
             </div>
+          </div>
+          <div id="doc1-signer-error" class="text-danger small mt-2" style="display:none;">
+            <i class="bi bi-exclamation-circle"></i> Informe ao menos um signatário para o Documento 1.
           </div>
         </div>
       </div>
 
       <!-- Documento 2 -->
-      <div class="card shadow-sm mb-4 border-warning">
-        <div class="card-header bg-warning text-dark">
+      <div class="card shadow-sm mb-4 border-0" style="border-top: 3px solid #fd7e14 !important;">
+        <div class="card-header py-3" style="background:#fd7e14;color:#fff;">
           <i class="bi bi-2-circle-fill"></i> Documento 2
           <small class="ms-2 opacity-75">Gerado automaticamente após a assinatura do Documento 1</small>
         </div>
         <div class="card-body">
-          <div class="mb-3">
-            <label class="form-label fw-semibold" for="doc2_name">Nome do Documento</label>
-            <input
-              type="text"
-              class="form-control"
-              id="doc2_name"
-              name="doc2_name"
-              placeholder="Ex: Termo de Confidencialidade"
-              value="{{ post_data.doc2_name|default:'' }}"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold" for="doc2_pdf_file">
-              <i class="bi bi-file-earmark-arrow-up"></i> Arquivo PDF
-            </label>
-            <input
-              type="file"
-              class="form-control"
-              id="doc2_pdf_file"
-              name="doc2_pdf_file"
-              accept=".pdf"
-              required
-            />
-            <div class="form-text">Selecione um arquivo PDF do seu computador.</div>
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold" for="doc2_name">Nome do Documento</label>
+              <input type="text" class="form-control" id="doc2_name" name="doc2_name"
+                placeholder="Ex: Termo de Confidencialidade"
+                value="{{ post_data.doc2_name|default:'' }}" />
+              <div class="invalid-feedback">O nome do Documento 2 é obrigatório.</div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold" for="doc2_pdf_file">
+                <i class="bi bi-file-earmark-arrow-up"></i> Arquivo PDF
+              </label>
+              <input type="file" class="form-control" id="doc2_pdf_file" name="doc2_pdf_file" accept=".pdf" />
+              <div class="invalid-feedback">Selecione o arquivo PDF do Documento 2 (apenas .pdf).</div>
+            </div>
           </div>
 
-          <hr />
-          <div class="d-flex justify-content-between align-items-center mb-2">
+          <hr class="my-3" />
+          <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="fw-semibold"><i class="bi bi-people"></i> Signatários</span>
-            <button type="button" class="btn btn-outline-warning btn-sm" onclick="addSigner('doc2')">
-              <i class="bi bi-plus"></i> Adicionar Signatário
+            <button type="button" class="btn btn-sm" style="border:1px solid #fd7e14;color:#fd7e14;" onclick="addSigner('doc2')">
+              <i class="bi bi-plus"></i> Adicionar
             </button>
           </div>
           <div id="doc2-signers">
             <div class="row g-2 mb-2 signer-row">
               <div class="col-md-5">
-                <input type="text" class="form-control" name="doc2_signer_name"
-                  placeholder="Nome completo" required />
+                <input type="text" class="form-control" name="doc2_signer_name" placeholder="Nome completo" />
+                <div class="invalid-feedback">Informe o nome do signatário.</div>
               </div>
               <div class="col-md-6">
-                <input type="email" class="form-control" name="doc2_signer_email"
-                  placeholder="email@exemplo.com (opcional)" />
+                <input type="email" class="form-control" name="doc2_signer_email" placeholder="email@exemplo.com (opcional)" />
               </div>
               <div class="col-md-1 d-flex align-items-center">
-                <button type="button" class="btn btn-outline-danger btn-sm"
-                  onclick="removeSigner(this)" title="Remover">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeSigner(this)" title="Remover">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
             </div>
           </div>
+          <div id="doc2-signer-error" class="text-danger small mt-2" style="display:none;">
+            <i class="bi bi-exclamation-circle"></i> Informe ao menos um signatário para o Documento 2.
+          </div>
         </div>
       </div>
 
       <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-success px-4">
+        <button type="submit" class="btn btn-primary px-4">
           <i class="bi bi-send"></i> Criar Fluxo e Enviar Documento 1
         </button>
-        <a href="{% url 'documents:index' %}" class="btn btn-outline-secondary">
-          Cancelar
-        </a>
+        <a href="{% url 'documents:index' %}" class="btn btn-outline-secondary">Cancelar</a>
       </div>
     </form>
 
@@ -174,26 +200,62 @@
 
 {% block extra_js %}
 <script>
+  // ── Pasta / Subpasta ──────────────────────────────────
+  function handleSelectChange(selectId, wrapId, inputId, hiddenId) {
+    const sel = document.getElementById(selectId);
+    const wrap = document.getElementById(wrapId);
+    const input = document.getElementById(inputId);
+    const hidden = document.getElementById(hiddenId);
+    if (sel.value === '__new__') {
+      wrap.style.display = 'block';
+      input.value = '';
+      hidden.value = '';
+      input.oninput = () => { hidden.value = input.value; };
+    } else {
+      wrap.style.display = 'none';
+      hidden.value = sel.value;
+    }
+    if (hiddenId === 'flow_name') clearFlowNameError();
+  }
+
+  function clearFlowNameError() {
+    document.getElementById('flow_name_error').style.display = 'none';
+    document.getElementById('subfolder_select').classList.remove('is-invalid');
+    const inp = document.getElementById('new_subfolder_input');
+    if (inp) inp.classList.remove('is-invalid');
+  }
+
+  // Inicializa hidden values com valores atuais dos selects
+  (function () {
+    ['folder_select', 'subfolder_select'].forEach(selId => {
+      const sel = document.getElementById(selId);
+      const hiddenId = selId === 'folder_select' ? 'folder_name' : 'flow_name';
+      const inputId  = selId === 'folder_select' ? 'new_folder_input' : 'new_subfolder_input';
+      const hidden = document.getElementById(hiddenId);
+      const input  = document.getElementById(inputId);
+      if (sel && sel.value !== '__new__' && !hidden.value) hidden.value = sel.value;
+      if (input) input.oninput = () => { hidden.value = input.value; };
+    });
+  })();
+
+  // ── Signatários ────────────────────────────────────────
   function addSigner(docPrefix) {
     const container = document.getElementById(docPrefix + '-signers');
     const row = document.createElement('div');
     row.className = 'row g-2 mb-2 signer-row';
     row.innerHTML = `
       <div class="col-md-5">
-        <input type="text" class="form-control" name="${docPrefix}_signer_name"
-          placeholder="Nome completo" required />
+        <input type="text" class="form-control" name="${docPrefix}_signer_name" placeholder="Nome completo" />
+        <div class="invalid-feedback">Informe o nome do signatário.</div>
       </div>
       <div class="col-md-6">
-        <input type="email" class="form-control" name="${docPrefix}_signer_email"
-          placeholder="email@exemplo.com (opcional)" />
+        <input type="email" class="form-control" name="${docPrefix}_signer_email" placeholder="email@exemplo.com (opcional)" />
       </div>
       <div class="col-md-1 d-flex align-items-center">
-        <button type="button" class="btn btn-outline-danger btn-sm"
-          onclick="removeSigner(this)" title="Remover">
+        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeSigner(this)" title="Remover">
           <i class="bi bi-trash"></i>
         </button>
-      </div>
-    `;
+      </div>`;
     container.appendChild(row);
   }
 
@@ -203,8 +265,93 @@
     if (rows.length > 1) {
       btn.closest('.signer-row').remove();
     } else {
-      alert('É necessário pelo menos um signatário.');
+      const nameInput = container.querySelector('[name$="_signer_name"]');
+      nameInput.classList.add('is-invalid');
+      nameInput.focus();
     }
   }
+
+  // ── Validação inline ──────────────────────────────────
+  function setInvalid(el, invalid) {
+    if (invalid) el.classList.add('is-invalid');
+    else el.classList.remove('is-invalid');
+  }
+
+  document.getElementById('create-flow-form').addEventListener('submit', function (e) {
+    let valid = true;
+
+    // flow_name (subpasta)
+    const flowName = document.getElementById('flow_name').value.trim();
+    const subSel = document.getElementById('subfolder_select');
+    const subInp = document.getElementById('new_subfolder_input');
+    const flowErr = document.getElementById('flow_name_error');
+    if (!flowName) {
+      flowErr.style.display = 'block';
+      subSel.classList.add('is-invalid');
+      if (subInp) subInp.classList.add('is-invalid');
+      valid = false;
+    } else {
+      flowErr.style.display = 'none';
+      subSel.classList.remove('is-invalid');
+      if (subInp) subInp.classList.remove('is-invalid');
+    }
+
+    // doc1_name
+    const doc1Name = document.getElementById('doc1_name');
+    setInvalid(doc1Name, !doc1Name.value.trim());
+    if (!doc1Name.value.trim()) valid = false;
+
+    // doc1_pdf_file
+    const doc1Pdf = document.getElementById('doc1_pdf_file');
+    setInvalid(doc1Pdf, !doc1Pdf.files.length);
+    if (!doc1Pdf.files.length) valid = false;
+
+    // doc1 signers — ao menos um nome preenchido
+    const doc1SignerNames = document.querySelectorAll('#doc1-signers [name="doc1_signer_name"]');
+    const doc1HasSigner = [...doc1SignerNames].some(i => i.value.trim());
+    document.getElementById('doc1-signer-error').style.display = doc1HasSigner ? 'none' : 'block';
+    if (!doc1HasSigner) {
+      doc1SignerNames.forEach(i => { if (!i.value.trim()) setInvalid(i, true); });
+      valid = false;
+    }
+
+    // doc2_name
+    const doc2Name = document.getElementById('doc2_name');
+    setInvalid(doc2Name, !doc2Name.value.trim());
+    if (!doc2Name.value.trim()) valid = false;
+
+    // doc2_pdf_file
+    const doc2Pdf = document.getElementById('doc2_pdf_file');
+    setInvalid(doc2Pdf, !doc2Pdf.files.length);
+    if (!doc2Pdf.files.length) valid = false;
+
+    // doc2 signers
+    const doc2SignerNames = document.querySelectorAll('#doc2-signers [name="doc2_signer_name"]');
+    const doc2HasSigner = [...doc2SignerNames].some(i => i.value.trim());
+    document.getElementById('doc2-signer-error').style.display = doc2HasSigner ? 'none' : 'block';
+    if (!doc2HasSigner) {
+      doc2SignerNames.forEach(i => { if (!i.value.trim()) setInvalid(i, true); });
+      valid = false;
+    }
+
+    if (!valid) {
+      e.preventDefault();
+      // Rola até o primeiro erro
+      const first = document.querySelector('.is-invalid, [style*="display: block"].text-danger');
+      if (first) first.closest('.card, .col-12, .col-md-5, .col-md-6')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+
+  // Limpa erro ao digitar / selecionar
+  document.addEventListener('input', e => {
+    if (e.target.matches('.form-control, .form-select')) {
+      e.target.classList.remove('is-invalid');
+    }
+  });
+  document.addEventListener('change', e => {
+    if (e.target.matches('.form-control, .form-select')) {
+      e.target.classList.remove('is-invalid');
+    }
+  });
 </script>
 {% endblock %}

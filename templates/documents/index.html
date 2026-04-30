@@ -1,55 +1,120 @@
 {% extends "base.html" %}
 
 {% block title %}Fluxos de Documentos — ZapSign{% endblock %}
+{% block nav_index %}active{% endblock %}
+{% block breadcrumb %}Fluxos de Documentos{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h2 class="mb-0"><i class="bi bi-collection"></i> Fluxos de Documentos</h2>
-  <a href="{% url 'documents:create_flow' %}" class="btn btn-success">
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h4 class="mb-0 fw-bold"><i class="bi bi-collection text-primary"></i> Fluxos de Documentos</h4>
+    <span class="text-muted small">{{ total }} fluxo{{ total|pluralize }} cadastrado{{ total|pluralize }}</span>
+  </div>
+  <a href="{% url 'documents:create_flow' %}" class="btn btn-primary">
     <i class="bi bi-plus-lg"></i> Novo Fluxo
   </a>
 </div>
 
+<!-- Filtros -->
+<div class="card shadow-sm mb-4 border-0">
+  <div class="card-body py-3">
+    <form method="get" class="row g-2 align-items-end">
+      <!-- Busca -->
+      <div class="col-12 col-md-4">
+        <label class="form-label small text-muted mb-1">Buscar</label>
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" class="form-control border-start-0" name="q" value="{{ search }}" placeholder="Nome do fluxo..." />
+        </div>
+      </div>
+
+      <!-- Pasta -->
+      <div class="col-12 col-md-3">
+        <label class="form-label small text-muted mb-1">Pasta</label>
+        <select class="form-select" name="folder">
+          <option value="">Todas as pastas</option>
+          {% for f in folders %}
+            <option value="{{ f }}" {% if f == folder_filter %}selected{% endif %}>{{ f }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Status -->
+      <div class="col-12 col-md-3">
+        <label class="form-label small text-muted mb-1">Status</label>
+        <select class="form-select" name="status">
+          <option value="">Todos os status</option>
+          <option value="doc1_pending" {% if status_filter == "doc1_pending" %}selected{% endif %}>Doc 1 Pendente</option>
+          <option value="doc2_pending" {% if status_filter == "doc2_pending" %}selected{% endif %}>Doc 2 Pendente</option>
+          <option value="completed"    {% if status_filter == "completed"    %}selected{% endif %}>Concluído</option>
+        </select>
+      </div>
+
+      <!-- Botões -->
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">
+          <i class="bi bi-funnel"></i> Filtrar
+        </button>
+        {% if search or status_filter or folder_filter %}
+          <a href="{% url 'documents:index' %}" class="btn btn-outline-secondary" title="Limpar filtros">
+            <i class="bi bi-x-lg"></i>
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Resultados -->
 {% if flows %}
   <div class="row g-3">
     {% for flow in flows %}
       <div class="col-12 col-md-6 col-xl-4">
-        <div class="card h-100 shadow-sm">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>{{ flow.name }}</strong>
+        <div class="card h-100 shadow-sm border-0 flow-card">
+          <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-start py-3">
+            <div>
+              <div class="fw-semibold text-truncate" style="max-width:180px;" title="{{ flow.name }}">{{ flow.name }}</div>
+              <span class="badge bg-light text-muted border small">
+                <i class="bi bi-folder2"></i> {{ flow.folder }}
+              </span>
+            </div>
             {% if flow.status == 'completed' %}
-              <span class="badge bg-success"><i class="bi bi-check-circle"></i> Concluído</span>
+              <span class="badge bg-success ms-2 flex-shrink-0"><i class="bi bi-check-circle"></i> Concluído</span>
             {% elif flow.status == 'doc2_pending' %}
-              <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Doc 2 em andamento</span>
+              <span class="badge bg-warning text-dark ms-2 flex-shrink-0"><i class="bi bi-hourglass-split"></i> Doc 2</span>
             {% else %}
-              <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Doc 1 em andamento</span>
+              <span class="badge bg-primary ms-2 flex-shrink-0"><i class="bi bi-hourglass-split"></i> Doc 1</span>
             {% endif %}
           </div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush mb-3">
+          <div class="card-body py-3">
+            <div class="d-flex flex-column gap-2">
               {% for doc in flow.documents.all %}
-                <li class="list-group-item px-0">
-                  <div class="d-flex align-items-center gap-2">
-                    {% if doc.status == 'signed' %}
-                      <i class="bi bi-check-circle-fill text-success"></i>
-                    {% elif doc.status == 'pending' %}
-                      <i class="bi bi-clock-fill text-primary"></i>
-                    {% else %}
-                      <i class="bi bi-circle text-secondary"></i>
-                    {% endif %}
-                    <span class="fw-semibold">Doc {{ doc.order }}:</span> {{ doc.name }}
-                  </div>
-                </li>
+                <div class="d-flex align-items-center gap-2">
+                  {% if doc.status == 'signed' %}
+                    <span class="badge rounded-pill bg-success" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                      <i class="bi bi-check" style="font-size:.75rem;"></i>
+                    </span>
+                  {% elif doc.status == 'pending' %}
+                    <span class="badge rounded-pill bg-primary" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                      {{ doc.order }}
+                    </span>
+                  {% else %}
+                    <span class="badge rounded-pill bg-secondary" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                      {{ doc.order }}
+                    </span>
+                  {% endif %}
+                  <span class="small text-truncate">{{ doc.name }}</span>
+                </div>
               {% endfor %}
-            </ul>
-            <small class="text-muted">
-              <i class="bi bi-calendar3"></i>
-              Criado em {{ flow.created_at|date:"d/m/Y H:i" }}
-            </small>
+            </div>
           </div>
-          <div class="card-footer">
-            <a href="{% url 'documents:flow_detail' flow.pk %}" class="btn btn-outline-primary btn-sm w-100">
-              <i class="bi bi-eye"></i> Ver Detalhes
+          <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              <i class="bi bi-calendar3"></i> {{ flow.created_at|date:"d/m/Y" }}
+            </small>
+            <a href="{% url 'documents:flow_detail' flow.pk %}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-eye"></i> Detalhes
             </a>
           </div>
         </div>
@@ -60,8 +125,19 @@
 {% else %}
   <div class="text-center py-5">
     <i class="bi bi-inbox display-1 text-muted"></i>
-    <p class="lead text-muted mt-3">Nenhum fluxo criado ainda.</p>
-    <a href="{% url 'documents:create_flow' %}" class="btn btn-success">
+    <p class="lead text-muted mt-3">
+      {% if search or status_filter or folder_filter %}
+        Nenhum fluxo encontrado com os filtros aplicados.
+      {% else %}
+        Nenhum fluxo criado ainda.
+      {% endif %}
+    </p>
+    {% if search or status_filter or folder_filter %}
+      <a href="{% url 'documents:index' %}" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-x-lg"></i> Limpar filtros
+      </a>
+    {% endif %}
+    <a href="{% url 'documents:create_flow' %}" class="btn btn-primary">
       <i class="bi bi-plus-lg"></i> Criar primeiro fluxo
     </a>
   </div>
