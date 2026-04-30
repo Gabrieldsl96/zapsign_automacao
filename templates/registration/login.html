@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login — ZapSign Automação</title>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}"/>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Quicksand", sans-serif; }
 
@@ -13,7 +15,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: #111;
+      background: #eaeef6;
       overflow: hidden;
     }
 
@@ -28,7 +30,7 @@
     .ring i {
       position: absolute;
       inset: 0;
-      border: 2px solid #fff;
+      border: 2px solid #b0bcd4;
       transition: 0.5s;
     }
     .ring i:nth-child(1) {
@@ -67,7 +69,7 @@
     }
     .login h2 {
       font-size: 2em;
-      color: #fff;
+      color: #2d3a55;
       letter-spacing: .05em;
     }
     .login .inputBx {
@@ -77,15 +79,19 @@
     .login .inputBx input {
       width: 100%;
       padding: 12px 20px;
-      background: transparent;
-      border: 2px solid #fff;
+      background: #fff;
+      border: 2px solid #c8d0e0;
       border-radius: 40px;
       font-size: 1.2em;
-      color: #fff;
+      color: #2d3a55;
       outline: none;
-      transition: border-color .3s;
+      transition: border-color .3s, box-shadow .3s;
     }
-    .login .inputBx input::placeholder { color: rgba(255,255,255,.65); }
+    .login .inputBx input:focus {
+      border-color: #406ff3;
+      box-shadow: 0 0 0 3px rgba(64,111,243,.12);
+    }
+    .login .inputBx input::placeholder { color: #8fa0b8; }
     .login .inputBx input[type="submit"] {
       background: linear-gradient(45deg, #ff357a, #fff172);
       border: none;
@@ -99,11 +105,11 @@
 
     .error-msg {
       width: 100%;
-      background: rgba(255, 53, 122, .15);
-      border: 1px solid rgba(255, 53, 122, .6);
+      background: rgba(255, 53, 122, .08);
+      border: 1px solid rgba(255, 53, 122, .4);
       border-radius: 40px;
       padding: 10px 20px;
-      color: #ff6b9d;
+      color: #c0284a;
       font-size: .95em;
       text-align: center;
     }

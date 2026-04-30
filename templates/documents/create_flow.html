@@ -5,17 +5,14 @@
 {% block breadcrumb %}<a href="{% url 'documents:index' %}" class="text-decoration-none text-muted">Fluxos</a> / Novo Fluxo{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-12 col-lg-9">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h4 class="mb-0 fw-bold"><i class="bi bi-plus-circle text-primary"></i> Novo Fluxo de Documentos</h4>
+    <span class="text-muted small">Configure os 2 documentos. O Documento 2 será enviado <strong>automaticamente</strong> após o Documento 1 ser totalmente assinado.</span>
+  </div>
+</div>
 
-    <div class="mb-4">
-      <h4 class="fw-bold mb-1"><i class="bi bi-plus-circle text-primary"></i> Novo Fluxo de Documentos</h4>
-      <p class="text-muted mb-0 small">
-        Configure os 2 documentos. O Documento 2 será enviado <strong>automaticamente</strong> após o Documento 1 ser totalmente assinado.
-      </p>
-    </div>
-
-    <form id="create-flow-form" method="post" enctype="multipart/form-data" novalidate>
+<form id="create-flow-form" method="post" enctype="multipart/form-data" novalidate>
       {% csrf_token %}
 
       <!-- Dados do Fluxo -->
@@ -193,9 +190,6 @@
         <a href="{% url 'documents:index' %}" class="btn btn-outline-secondary">Cancelar</a>
       </div>
     </form>
-
-  </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}

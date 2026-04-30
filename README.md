@@ -12,14 +12,16 @@ Aplicação Django que integra com a [API da ZapSign](https://docs.zapsign.com.b
 - Suporte a múltiplos signatários por documento
 - Envio automático de e-mail ao signatário (quando e-mail informado)
 - Acompanhamento do status de cada documento e signatário em tempo real
-- Interface com Bootstrap 5 e painel admin Django
+- Download do documento assinado (link gerado via webhook)
+- Autenticação de usuários (login/logout) com redirecionamento protegido por `@login_required`
+- Interface moderna com sidebar animada (efeito gooey pill), página de login com anéis animados e favicon SVG personalizado
 
 ---
 
 ## Pré-requisitos
 
 - Python 3.10+
-- Conta na [ZapSign](https://app.zapsign.com.br) com token de API
+- Conta na [ZapSign](https://app.zapsign.com.br) com token de API (Sandbox ou Produção)
 - Para testes locais: [ngrok](https://ngrok.com) (para expor o webhook ao exterior)
 
 ---
@@ -80,6 +82,9 @@ Zapgsing_API/
 ├── requirements.txt
 ├── manage.py
 │
+├── static/                     ← arquivos estáticos globais
+│   └── favicon.svg             ← favicon SVG do sistema
+│
 ├── zapgsing_api/               ← configurações do projeto Django
 │   ├── settings.py
 │   ├── urls.py
@@ -90,7 +95,6 @@ Zapgsing_API/
 │   ├── services.py             ← chamadas à API ZapSign (criar documento)
 │   ├── views.py                ← listagem, criação e detalhe de fluxos
 │   ├── urls.py
-│   ├── forms.py
 │   └── admin.py
 │
 ├── webhooks/                   ← app de recepção de eventos
@@ -98,11 +102,13 @@ Zapgsing_API/
 │   └── urls.py
 │
 └── templates/
-    ├── base.html               ← layout com Bootstrap 5
+    ├── base.html               ← layout com sidebar animada (Bootstrap 5)
+    ├── registration/
+    │   └── login.html          ← página de login com anéis animados
     └── documents/
-        ├── index.html          ← lista de fluxos
-        ├── create_flow.html    ← formulário de criação
-        └── flow_detail.html    ← detalhe com links de assinatura
+        ├── index.html          ← lista de fluxos com filtros
+        ├── create_flow.html    ← formulário de criação com validação inline
+        └── flow_detail.html    ← detalhe com links de assinatura e download
 ```
 
 ---
@@ -159,14 +165,16 @@ Zapgsing_API/
 
 ## Rotas disponíveis
 
-| Método | URL                       | Descrição                              |
-|--------|---------------------------|----------------------------------------|
-| GET    | `/`                       | Lista todos os fluxos                  |
-| GET    | `/fluxo/novo/`            | Formulário para criar um novo fluxo    |
-| POST   | `/fluxo/novo/`            | Processa a criação do fluxo            |
-| GET    | `/fluxo/<id>/`            | Detalhe do fluxo com links de assinatura |
-| POST   | `/webhooks/receive/`      | Endpoint que recebe eventos da ZapSign |
-| \*     | `/admin/`                 | Painel administrativo Django           |
+| Método | URL                       | Descrição                                          |
+|--------|---------------------------|----------------------------------------------------|
+| GET    | `/`                       | Lista todos os fluxos (requer login)               |
+| GET    | `/fluxo/novo/`            | Formulário para criar um novo fluxo (requer login) |
+| POST   | `/fluxo/novo/`            | Processa a criação do fluxo                        |
+| GET    | `/fluxo/<id>/`            | Detalhe do fluxo com links e download              |
+| POST   | `/webhooks/receive/`      | Endpoint que recebe eventos da ZapSign             |
+| GET    | `/login/`                 | Página de login                                    |
+| POST   | `/logout/`                | Encerra a sessão do usuário                        |
+| \*     | `/admin/`                 | Painel administrativo Django                       |
 
 ---
 
