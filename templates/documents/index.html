@@ -91,7 +91,7 @@
             <div class="d-flex flex-column gap-2">
               {% for doc in flow.documents.all %}
                 <div class="d-flex align-items-center gap-2">
-                  {% if doc.status == 'signed' %}
+                  {% if doc.status == 'signed' or doc.status == 'sent' %}
                     <span class="badge rounded-pill bg-success" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
                       <i class="bi bi-check" style="font-size:.75rem;"></i>
                     </span>

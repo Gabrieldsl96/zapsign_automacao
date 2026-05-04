@@ -37,6 +37,7 @@ class ZapSignDocument(models.Model):
     STATUS_CHOICES = [
         ("not_created", "Não Enviado"),
         ("pending", "Aguardando Assinatura"),
+        ("sent", "Enviado"),
         ("signed", "Assinado"),
     ]
 

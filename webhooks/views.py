@@ -99,9 +99,13 @@ def _handle_doc_signed(payload):
         try:
             doc2 = flow.documents.get(order=2)
             create_zapsign_document(doc2)
-            flow.status = "doc2_pending"
+            # Doc 2 é enviado para assinatura, mas o fluxo é concluído imediatamente
+            # sem aguardar que o signatário assine.
+            flow.status = "completed"
             flow.save(update_fields=["status"])
-            logger.info('Documento 2 criado com sucesso para o fluxo "%s"', flow.name)
+            logger.info(
+                'Documento 2 enviado para o fluxo "%s". Fluxo concluído.', flow.name
+            )
         except ZapSignDocument.DoesNotExist:
             logger.error("Documento 2 não encontrado para o fluxo id=%s", flow.pk)
         except Exception as exc:

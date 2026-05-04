@@ -58,7 +58,8 @@ def create_zapsign_document(document):
 
     # Atualiza o documento com o token e status retornados pela ZapSign
     document.zapsign_token = data["token"]
-    document.status = "pending"
+    # Doc 2 é enviado sem aguardar assinatura
+    document.status = "sent" if document.order == 2 else "pending"
     document.created_at = timezone.now()
     document.save()
 
