@@ -7,7 +7,7 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-ZAPSIGN_API_URL = "https://sandbox.api.zapsign.com.br/api/v1"
+ZAPSIGN_API_URL = "https://api.zapsign.com.br/api/v1"
 
 
 def create_zapsign_document(document):
